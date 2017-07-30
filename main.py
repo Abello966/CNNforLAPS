@@ -1,4 +1,8 @@
+#to-do: read form argument
+DATAPATH = "LAPSClean.npz"
+
 #Libraries
+import os, sys
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import model_selection
@@ -23,6 +27,17 @@ pos_nfilters = [16]
 files = np.load("LAPSClean.npz")
 X = files['arr_0']
 y = files['arr_1']
+
+#Some preparing 
+RESULTSPATH = DATAPATH.split(".")[0]
+if not os.path.exists(RESULTSPATH):
+    os.makedirs(RESULTSPATH)
+
+try
+    os.chdir(RESULTSPATH)
+except:
+    print("Cant go to results directory")
+    sys.exit(1)
 
 ##Dataset Selection - only classes above 100 examples
 density, cls = np.histogram(y, bins=25)
