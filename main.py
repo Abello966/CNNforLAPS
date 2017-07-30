@@ -1,5 +1,5 @@
 #to-do: read form argument
-DATAPATH = "DLAPS_BG.npz"
+DATAPATH = "DLAPS_reduced_BG.npz"
 
 #Libraries
 import os, sys
@@ -18,12 +18,12 @@ epochs = 100
 learning_rate = 0.001
 test_size = 0.1
 batchsize = 500
-stopping = 1.125
+stopping = 1.25
 nfolds = 10
 
 ## Define variables of experiment
 pos_imsize = [32, 64, 96, 128]
-pos_nfilters = [16, 32, 64, 96]
+pos_nfilters = [8, 16, 32, 64]
 
 ## Load Images
 files = np.load(DATAPATH)
@@ -47,7 +47,7 @@ except:
     print("Cant open results text-file")
     sys.exit(1)
 
-##Dataset Selection - only classes above 100 examples
+##Dataset Selection - only classes above threshold
 density, cls = np.histogram(y, bins=max(y) + 1)
 Xstack = np.vstack((X,y)).transpose()
 Xfilter = np.array(list(filter(lambda x: density[x[1]] > 100, Xstack)))

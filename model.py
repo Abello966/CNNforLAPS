@@ -86,4 +86,7 @@ def save_results(train_loss, test_loss, imsize, nfilters):
     plt.legend()
     plt.savefig("plot_size{:d}_filters{:d}.png".format(imsize, nfilters))
     np.savez("data_size{:d}_filters{:d}".format(imsize, nfilters), train_loss=np.array(train_loss), test_loss=np.array(test_loss))
+    plt.cla()
+    plt.clf()
+    plt.close()
 
