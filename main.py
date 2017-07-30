@@ -1,5 +1,5 @@
 #to-do: read form argument
-DATAPATH = "LAPSClean.npz"
+DATAPATH = "LRoot_clean.npz"
 
 #Libraries
 import os, sys
@@ -37,6 +37,12 @@ try:
     os.chdir(RESULTSPATH)
 except:
     print("Cant go to results directory")
+    sys.exit(1)
+
+try:
+    sys.stdout = open(RESULTSPATH + "_results.txt", "w")
+except:
+    print("Cant open results text-file")
     sys.exit(1)
 
 ##Dataset Selection - only classes above 100 examples
