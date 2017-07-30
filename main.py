@@ -1,4 +1,8 @@
+#to-do: read from cmd line argument
+DATAPATH = "DLAPS_reduced_BG.npz"
+
 #Libraries
+import os, sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -22,9 +26,27 @@ pos_imsize = [32, 64, 96, 128]
 pos_nfilters = [8, 16, 24, 32]
 
 ## Load Images
-files = np.load("DLAPS_reduced_BG.npz")
+files = np.load(DATAPATH)
 X = files['arr_0']
 y = files['arr_1']
+
+#Some preparing 
+RESULTSPATH = DATAPATH.split(".")[0]
+if not os.path.exists(RESULTSPATH):
+    os.makedirs(RESULTSPATH)
+
+try:
+    os.chdir(RESULTSPATH)
+except:
+    print("Cant go to results directory")
+    sys.exit(1)
+
+try:
+    sys.stdout = open("results.txt", "w")
+except Exception as inst:
+    print("Cant open results text-file")
+    print(inst)
+    sys.exit(1)
 
 ##Dataset Selection - only classes above 100 examples
 density, cls = np.histogram(y, bins=max(y) + 1)
@@ -100,7 +122,7 @@ ytest = ytest.astype("uint8")
 
 Xtr_resh, ytr_resh = reshape_dataset(Xtrain, ytrain, imsize)
 Xtest_resh, ytest_resh = reshape_dataset(Xtest, ytest, imsize)
-network, train_fn, test_fn = compile_cnn(imsize, nfilters, learning_rate)
+network, train_fn, test_fn = compile_cnn(imsize, nclasses, nfilters, learning_rate)
 train_loss, test_loss, acc = train_cnn(Xtr_resh, ytr_resh, Xtest_resh, ytest_resh, train_fn, test_fn, epochs, batchsize, stopping)
 
 print("Final test accuracy:" + str(acc))
