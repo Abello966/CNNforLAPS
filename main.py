@@ -1,9 +1,11 @@
 #to-do: read form argument
-DATAPATH = "LRoot_clean.npz"
+DATAPATH = "DLAPS_BG.npz"
 
 #Libraries
 import os, sys
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn import model_selection
 
@@ -16,15 +18,15 @@ epochs = 100
 learning_rate = 0.001
 test_size = 0.1
 batchsize = 500
-stopping = 1.25
+stopping = 1.125
 nfolds = 10
 
 ## Define variables of experiment
-pos_imsize = [32]
-pos_nfilters = [16]
+pos_imsize = [32, 64, 96, 128]
+pos_nfilters = [16, 32, 64, 96]
 
 ## Load Images
-files = np.load("LAPSClean.npz")
+files = np.load(DATAPATH)
 X = files['arr_0']
 y = files['arr_1']
 
@@ -97,10 +99,10 @@ for imsize in pos_imsize:
         del train_fn
         del test_fn
         del network
-        del Xtr_resh
-        del Xval_resh
-        del ytr_resh
-        del yval_resh
+    del Xtr_resh
+    del Xval_resh
+    del ytr_resh
+    del yval_resh
 
 
 #Print Results
