@@ -1,4 +1,4 @@
-#to-do: read form argument
+#to-do: read from cmd line argument
 DATAPATH = "DLAPS_reduced_BG.npz"
 
 #Libraries
@@ -23,7 +23,7 @@ nfolds = 10
 
 ## Define variables of experiment
 pos_imsize = [32, 64, 96, 128]
-pos_nfilters = [8, 16, 32, 64]
+pos_nfilters = [8, 16, 24, 32]
 
 ## Load Images
 files = np.load(DATAPATH)
@@ -42,12 +42,12 @@ except:
     sys.exit(1)
 
 try:
-    sys.stdout = open(RESULTSPATH + "_results.txt", "w")
+    sys.stdout = open("results.txt", "w")
 except:
     print("Cant open results text-file")
     sys.exit(1)
 
-##Dataset Selection - only classes above threshold
+##Dataset Selection - only classes above 100 examples
 density, cls = np.histogram(y, bins=max(y) + 1)
 Xstack = np.vstack((X,y)).transpose()
 Xfilter = np.array(list(filter(lambda x: density[x[1]] > 100, Xstack)))
@@ -79,7 +79,7 @@ for imsize in pos_imsize:
         print("------------" * 5)
         print("Experiment: {:d}x{:d} images and {:d} filters".format(imsize, imsize, nfilters))
         print("Compiling CNN")
-        network, train_fn, test_fn = compile_cnn(imsize, nfilters, nclasses, learning_rate)
+        network, train_fn, test_fn = compile_cnn(imsize, nclasses, nfilters, learning_rate)
         train_loss, val_loss, acc = train_cnn(Xtr_resh, ytr_resh, Xval_resh, yval_resh, train_fn, test_fn, epochs, batchsize, stopping)
         
         print("Training ended")
@@ -91,7 +91,7 @@ for imsize in pos_imsize:
         results[(imsize, nfilters)] = acc
         if (acc > winning_cnn_acc):
             winning_cnn = (imsize, nfilters)
-            winning_cnn_acc = 0
+            winning_cnn_acc = acc
             
         print("------------" * 5)
 
@@ -121,7 +121,7 @@ ytest = ytest.astype("uint8")
 
 Xtr_resh, ytr_resh = reshape_dataset(Xtrain, ytrain, imsize)
 Xtest_resh, ytest_resh = reshape_dataset(Xtest, ytest, imsize)
-network, train_fn, test_fn = compile_cnn(imsize, nfilters, nclasses, learning_rate)
+network, train_fn, test_fn = compile_cnn(imsize, nclasses, nfilters, learning_rate)
 train_loss, test_loss, acc = train_cnn(Xtr_resh, ytr_resh, Xtest_resh, ytest_resh, train_fn, test_fn, epochs, batchsize, stopping)
 
 print("Final test accuracy:" + str(acc))

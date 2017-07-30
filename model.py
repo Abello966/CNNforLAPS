@@ -9,9 +9,8 @@ from lasagne.init import GlorotUniform
 
 from image_processing import *
 
-def build_cnn(imsize, nfilters, nclasses, input_var=None):
-    network = InputLayer(shape=(None, 1, imsize, imsize), input_var=input_var)
-    
+def build_cnn(imsize, nclasses, nfilters, input_var=None):
+    network = InputLayer(shape=(None, 1, imsize, imsize), input_var=input_var) 
     inputsize = imsize
     while inputsize > 8:
         network = Conv2DLayer(network, num_filters=nfilters, filter_size=(5,5), nonlinearity=rectify)
@@ -25,10 +24,10 @@ def build_cnn(imsize, nfilters, nclasses, input_var=None):
     network = DenseLayer(network, num_units=nclasses, nonlinearity=softmax)
     return network
 
-def compile_cnn(imsize, nfilters, nclasses, learning_rate):
+def compile_cnn(imsize, nclasses, nfilters, learning_rate):
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
-    network = build_cnn(input_var=input_var, imsize=imsize, nfilters=nfilters, nclasses=nclasses)
+    network = build_cnn(imsize, nclasses, nfilters, input_var=input_var)
     
     #loss function
     prediction = lasagne.layers.get_output(network)
