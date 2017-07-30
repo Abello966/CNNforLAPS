@@ -33,18 +33,19 @@ RESULTSPATH = DATAPATH.split(".")[0]
 if not os.path.exists(RESULTSPATH):
     os.makedirs(RESULTSPATH)
 
-try
+try:
     os.chdir(RESULTSPATH)
 except:
     print("Cant go to results directory")
     sys.exit(1)
 
 ##Dataset Selection - only classes above 100 examples
-density, cls = np.histogram(y, bins=25)
+density, cls = np.histogram(y, bins=max(y) + 1)
 Xstack = np.vstack((X,y)).transpose()
 Xfilter = np.array(list(filter(lambda x: density[x[1]] > 100, Xstack)))
 yfilter = Xfilter[:, 1]
 Xfilter = Xfilter[:, 0]
+nclasses = len(set(yfilter))
 
 #Separate train, test 
 Xtrain, Xtest, ytrain, ytest = model_selection.train_test_split(Xfilter, yfilter, test_size=test_size, random_state=0)
@@ -70,7 +71,7 @@ for imsize in pos_imsize:
         print("------------" * 5)
         print("Experiment: {:d}x{:d} images and {:d} filters".format(imsize, imsize, nfilters))
         print("Compiling CNN")
-        network, train_fn, test_fn = compile_cnn(imsize, nfilters, learning_rate)
+        network, train_fn, test_fn = compile_cnn(imsize, nfilters, nclasses, learning_rate)
         train_loss, val_loss, acc = train_cnn(Xtr_resh, ytr_resh, Xval_resh, yval_resh, train_fn, test_fn, epochs, batchsize, stopping)
         
         print("Training ended")
@@ -112,7 +113,7 @@ ytest = ytest.astype("uint8")
 
 Xtr_resh, ytr_resh = reshape_dataset(Xtrain, ytrain, imsize)
 Xtest_resh, ytest_resh = reshape_dataset(Xtest, ytest, imsize)
-network, train_fn, test_fn = compile_cnn(imsize, nfilters, learning_rate)
+network, train_fn, test_fn = compile_cnn(imsize, nfilters, nclasses, learning_rate)
 train_loss, test_loss, acc = train_cnn(Xtr_resh, ytr_resh, Xtest_resh, ytest_resh, train_fn, test_fn, epochs, batchsize, stopping)
 
 print("Final test accuracy:" + str(acc))
