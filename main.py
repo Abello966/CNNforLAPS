@@ -18,7 +18,8 @@ epochs = 100
 learning_rate = 0.001
 batchsize = 500
 stopping = 1.25
-nfolds = 10
+test_size = 0.1
+stratified = False
 
 ## Define variables of experiment
 pos_imsize = [32]
@@ -54,11 +55,16 @@ yfilter = Xfilter[:, 1]
 Xfilter = Xfilter[:, 0]
 nclasses = len(set(yfilter))
 
+#Label classes correctly
+uniq_classes = list(set(yfilter))
+for i in range(len(yfilter)):
+    yfilter[i] = uniq_classes.index(yfilter[i])
+ 
 #Separate train, test 
-Xtrain, ytrain, Xtest, ytest = stratified_split(Xfilter, yfilter, nfolds, random_state=0)
+Xtrain, ytrain, Xtest, ytest = stratified_split(Xfilter, yfilter, test_size, random_state=0, stratified=stratified)
 
 #Separate train, val
-Xtrain, ytrain, Xval, yval = stratified_split(Xtrain, ytrain, nfolds, random_state=0)
+Xtrain, ytrain, Xval, yval = stratified_split(Xtrain, ytrain, test_size, random_state=0, stratified=stratified)
 
 ytrain = ytrain.astype("uint8")
 ytest = ytest.astype("uint8")
@@ -114,7 +120,7 @@ print("Best network: {:d} image size and {:d} filters".format(imsize, nfilters))
 print("Re-training")
 
 #Separate train, test 
-Xtrain, ytrain, Xtest, ytest = stratified_split(Xfilter, yfilter, nfolds, random_state=0)
+Xtrain, ytrain, Xtest, ytest = stratified_split(Xfilter, yfilter, test_size, random_state=0, stratified=stratified)
 ytrain = ytrain.astype("uint8")
 ytest = ytest.astype("uint8")
 

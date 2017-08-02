@@ -74,11 +74,18 @@ def minibatch_iter(images, targets, batchsize):
         yield images[excerpt], targets[excerpt]
         numproc += batchsize / len(classes)   
 
-def stratified_split(images, targets, nfolds, random_state=0):
-    skf = model_selection.StratifiedKFold(n_splits=nfolds, random_state=random_state)
-    gen = skf.split(images, targets)
-    train, test = next(gen)
-    return images[train], targets[train], images[test], targets[test]
+def stratified_split(images, targets, test_size, random_state=0, stratified=False):
+    if stratified:
+        nfolds = min(int(test_size ** -1), 2)
+        skf = model_selection.StratifiedKFold(n_splits=nfolds, random_state=random_state)
+        gen = skf.split(images, targets)
+        train, test = next(gen)
+        del skf
+        return images[train], targets[train], images[test], targets[test]
+    else:
+        Xtrain, Xtest, ytrain, ytest = model_selection.train_test_split(images, targets, test_size=test_size)
+        return Xtrain, ytrain, Xtest, ytest
+
     
 
 
