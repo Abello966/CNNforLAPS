@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from scipy import misc
+from sklearn import model_selection
 
 #Image resizing
 #Gives a Tuple corresponding to a symmetric padding
@@ -21,8 +22,6 @@ def reshape_dataset(X, y, imsize):
     #Convert to Theano-Lasagne shape
     Xreshaped = Xreshaped.reshape((Xreshaped.shape[0], 1, imsize, imsize))
     return Xreshaped, y
-
-
 
 ##Data Augmentation and Minibatch
 augmentations = {
@@ -49,12 +48,38 @@ def augmentation_iter(images):
         yield augmentations[choice](images)
         
 
+#Now enforcing class balance!
 def minibatch_iter(images, targets, batchsize):
     indices = np.arange(len(images))
-    np.random.shuffle(indices)
+    classes = set(targets)
+    class_indices_list = list()
+    class_size = int(batchsize / len(classes))
 
-    for index in range(0, len(images) - batchsize + 1, batchsize):
-        excerpt = indices[index:index + batchsize]
+    for targ_class in classes:
+        class_indices = [x for x in indices if targets[x] == targ_class]
+        np.random.shuffle(class_indices)
+        class_indices_list.append(class_indices)
+
+    #number of examples processed for each class 
+    numproc = 0
+    smallest_class = min([len(x) for x in class_indices_list])
+    while numproc < smallest_class:
+        excerpt = list()
+        i = 0
+        for class_indices in class_indices_list:
+            if len(class_indices) < class_size:
+                excerpt = excerpt + class_indices
+            else:
+                excerpt = excerpt + class_indices[0:class_size]
         yield images[excerpt], targets[excerpt]
+        numproc += batchsize / len(classes)   
+
+def stratified_split(images, targets, nfolds, random_state=0):
+    skf = model_selection.StratifiedKFold(n_splits=nfolds, random_state=random_state)
+    gen = skf.split(images, targets)
+    train, test = next(gen)
+    return images[train], targets[train], images[test], targets[test]
+    
+
 
 

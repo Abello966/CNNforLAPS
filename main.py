@@ -1,5 +1,5 @@
 #to-do: read from cmd line argument
-DATAPATH = "DLAPS_reduced_BG.npz"
+DATAPATH = "LAPSClean.npz"
 
 #Libraries
 import os, sys
@@ -16,14 +16,13 @@ from model import *
 verbose = True
 epochs = 100
 learning_rate = 0.001
-test_size = 0.1
 batchsize = 500
 stopping = 1.25
 nfolds = 10
 
 ## Define variables of experiment
-pos_imsize = [32, 64, 96, 128]
-pos_nfilters = [8, 16, 24, 32]
+pos_imsize = [32]
+pos_nfilters = [16]
 
 ## Load Images
 files = np.load(DATAPATH)
@@ -56,10 +55,10 @@ Xfilter = Xfilter[:, 0]
 nclasses = len(set(yfilter))
 
 #Separate train, test 
-Xtrain, Xtest, ytrain, ytest = model_selection.train_test_split(Xfilter, yfilter, test_size=test_size, random_state=0)
+Xtrain, ytrain, Xtest, ytest = stratified_split(Xfilter, yfilter, nfolds, random_state=0)
 
 #Separate train, val
-Xtrain, Xval, ytrain, yval = model_selection.train_test_split(Xtrain, ytrain, test_size=test_size, random_state=0)
+Xtrain, ytrain, Xval, yval = stratified_split(Xtrain, ytrain, nfolds, random_state=0)
 
 ytrain = ytrain.astype("uint8")
 ytest = ytest.astype("uint8")
@@ -115,7 +114,7 @@ print("Best network: {:d} image size and {:d} filters".format(imsize, nfilters))
 print("Re-training")
 
 #Separate train, test 
-Xtrain, Xtest, ytrain, ytest = model_selection.train_test_split(Xfilter, yfilter, test_size=test_size, random_state=0)
+Xtrain, ytrain, Xtest, ytest = stratified_split(Xfilter, yfilter, nfolds, random_state=0)
 ytrain = ytrain.astype("uint8")
 ytest = ytest.astype("uint8")
 
