@@ -48,9 +48,22 @@ def augmentation_iter(images):
         yield augmentations[choice](images)
         
 
+def minibatch_iter(targets, batchsize):
+    indices = np.arange(len(targets))
+    #np.random.shuffle(indices)
+    i = 0
+    while True:
+        excerpt = indices[i * batchsize: (i+1) * batchsize]
+        if len(excerpt) == 0:
+            return
+        yield excerpt
+        if len(excerpt) < batchsize:
+            return
+        i += 1
+
 #Now enforcing class balance!
-def minibatch_iter(images, targets, batchsize):
-    indices = np.arange(len(images))
+def minibatch_iter_balanced(targets, batchsize):
+    indices = np.arange(len(targets))
     classes = set(targets)
     class_indices_list = list()
     class_size = int(batchsize / len(classes))
@@ -67,24 +80,23 @@ def minibatch_iter(images, targets, batchsize):
         excerpt = list()
         i = 0
         for class_indices in class_indices_list:
-            if len(class_indices) < class_size:
-                excerpt = excerpt + class_indices
-            else:
-                excerpt = excerpt + class_indices[0:class_size]
-        yield images[excerpt], targets[excerpt]
-        numproc += batchsize / len(classes)   
+            excerpt = excerpt + class_indices[i * class_size:(i + 1) * class_size]
+        yield excerpt
+        i += 1
+        numproc += batchsize 
 
-def stratified_split(images, targets, test_size, random_state=0, stratified=False):
+def stratified_split(dataset_size, test_size, random_state=0, stratified=False):
+    idx = np.arange(dataset_size)
     if stratified:
         nfolds = min(int(test_size ** -1), 2)
         skf = model_selection.StratifiedKFold(n_splits=nfolds, random_state=random_state)
-        gen = skf.split(images, targets)
+        gen = skf.split(idx, idx)
         train, test = next(gen)
         del skf
-        return images[train], targets[train], images[test], targets[test]
+        return train, test
     else:
-        Xtrain, Xtest, ytrain, ytest = model_selection.train_test_split(images, targets, test_size=test_size)
-        return Xtrain, ytrain, Xtest, ytest
+        idx_train, idx_test, _, _ = model_selection.train_test_split(idx, idx, test_size=test_size)
+        return idx_train, idx_test
 
     
 
