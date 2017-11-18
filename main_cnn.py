@@ -48,8 +48,8 @@ config['test_size'] = 0.1
 config['stratified'] = False
 
 ## Define variables of experiment
-pos_imsize = [32]
-pos_nfilters = [16]
+pos_imsize = [32, 64, 96, 128]
+pos_nfilters = [4, 8, 16, 32]
 
 ## Load Data
 images = np.load(args.images[0])
@@ -107,26 +107,29 @@ for imsize in pos_imsize:
     Xval_resh, yval_resh = reshape_dataset(Xval, yval, imsize)
 
     for nfilters in pos_nfilters:
+        if (nfilters == 32 and imsize == 128):
+            continue #not enough memory
         name = "{:d}x{:d} images and {:d} filters".format(imsize, imsize, nfilters)
         print("------------" * 5)
         print(name)
         config['imsize'] = imsize
         config['nfilters'] = nfilters
-        network = CNN(config, name)
-        acc = network.train(Xtr_resh, ytr_resh, Xval_resh, yval_resh, True)
+        acc = list()
+        for i in range(5):
+            network = CNN(config, name)
+            acc.append(network.train(Xtr_resh, ytr_resh, Xval_resh, yval_resh, True))
+            del network
+
         print("Training ended")
-        print("Epochs: {:d}".format(len(network.train_loss)))
-        print("Validation acc: {}".format(acc))
+        print("Validation acc: {} +- {}".format(np.mean(acc), np.var(acc)))
         
-        results[(imsize, nfilters)] = acc
-        if (acc > winning_cnn_acc):
+        results[(imsize, nfilters)] = np.mean(acc)
+        if (np.mean(acc) > winning_cnn_acc):
             winning_cnn = (imsize, nfilters)
-            winning_cnn_acc = acc
+            winning_cnn_acc = np.mean(acc)
             
         print("------------" * 5)
 
-        #Let GC know it can free this now
-        del network
     del Xtr_resh
     del Xval_resh
     del ytr_resh
@@ -138,23 +141,32 @@ print("Results: ")
 print(results)
 
 #Get best network
-"""
 imsize, nfilters = winning_cnn
+name = "{:d}x{:d} images and {:d} filters".format(imsize, imsize, nfilters)
 print("Best network: {:d} image size and {:d} filters".format(imsize, nfilters))
 print("Re-training")
+config['imsize'] = imsize
+config['nfilters'] = nfilters
 
 #Separate train, test 
-Xtrain, ytrain, Xtest, ytest = stratified_split(Xfilter, yfilter, test_size, random_state=0, stratified=stratified)
-ytrain = ytrain.astype("uint8")
-ytest = ytest.astype("uint8")
+train_idx, test_idx = stratified_split(X.shape[0], config['test_size'],
+                       random_state=0, stratified=config['stratified'])
+
+Xtrain = X[train_idx]
+ytrain = y[train_idx]
+Xtest = X[test_idx]
+ytest = y[test_idx]
 
 Xtr_resh, ytr_resh = reshape_dataset(Xtrain, ytrain, imsize)
 Xtest_resh, ytest_resh = reshape_dataset(Xtest, ytest, imsize)
-network, train_fn, test_fn = compile_cnn(imsize, nclasses, nfilters, learning_rate)
-train_loss, test_loss, acc = train_cnn(Xtr_resh, ytr_resh, Xtest_resh, ytest_resh, train_fn, test_fn, epochs, batchsize, stopping)
 
-print("Final test accuracy:" + str(acc))
-"""
+acc = list()
+for i in range(5):
+    network = CNN(config, name)
+    acc.append(network.train(Xtr_resh, ytr_resh, Xtest_resh, ytest_resh, True))
+    
+
+print("Final test mean acc and var:{} +- {}".format(np.mean(acc), np.var(acc))
 
 
 

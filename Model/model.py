@@ -19,7 +19,7 @@ class LasagneModel:
         plt.plot(np.arange(len(train_loss)), train_loss, label="train loss")
         plt.plot(test_loss, label="test loss")
         plt.yscale('log')
-        plt.ylabel('epochs')
+        plt.xlabel('epochs')
         plt.title(self.name)
         plt.legend()
         plt.savefig("plot_{}.png".format(self.name))
