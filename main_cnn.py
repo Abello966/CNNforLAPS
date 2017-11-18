@@ -166,20 +166,4 @@ for i in range(5):
     acc.append(network.train(Xtr_resh, ytr_resh, Xtest_resh, ytest_resh, True))
     
 
-print("Final test mean acc and var:{} +- {}".format(np.mean(acc), np.var(acc))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+print("Final test mean acc and var:{} +- {}".format(np.mean(acc), np.var(acc)))

@@ -5,7 +5,6 @@ from lasagne.layers import InputLayer, DenseLayer
 from lasagne.nonlinearities import softmax
 from lasagne.regularization import l2, regularize_network_params
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 import sys
 from Model.model import LasagneModel

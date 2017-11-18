@@ -1,13 +1,10 @@
 #Libraries
 import os, sys
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 from sklearn import model_selection
 
 #Other files
-from image_processing import stratified_split, reshape_dataset
+from Util.image_processing import stratified_split, reshape_dataset
 from Model.MixedCNN import MixedCNN
 
 ##Constants
@@ -74,7 +71,7 @@ config['deep'] = config_dp
 
 ## Define variables of experiment
 pos_imsize = [32]
-pos_nfilters = [4]
+pos_nfilters = [16]
 
 ## Load data
 files = np.load(args.input[0])
@@ -96,11 +93,11 @@ try:
 except:
     print("Cant go to results directory")
     sys.exit(1)
-#try:
-#    sys.stdout = open("results.txt", "w")
-#except:
-#    print("Cant open results text-file")
-#    sys.exit(1)
+try:
+    sys.stdout = open("results.txt", "w")
+except:
+    print("Cant open results text-file")
+    sys.exit(1)
 
 #Separate train, test 
 train_idx, test_idx = stratified_split(X.shape[0], config['test_size'], random_state=0, stratified=config['stratified'])
@@ -130,16 +127,17 @@ for imsize in pos_imsize:
     #Reshapes dataset
     Xtr_resh, ytr_resh = reshape_dataset(Xtrain, ytrain, imsize)
     Xval_resh, yval_resh = reshape_dataset(Xval, yval, imsize)
-    config['deep']['imsize'] = imsize
+    config['imsize'] = imsize
 
     for nfilters in pos_nfilters:
         print("------------" * 5)
-        name = "{:d}x{:d}/{:d} filters/{} feats".format(imsize, imsize, nfilter, args.name)
+        name = "{:d}x{:d}_{:d}filters_{}_feats".format(imsize, imsize, nfilters, name)
         print(name)
         print("Compiling CNN")
-        config['deep']['nfilters'] = nfilters
+        config['nfilters'] = nfilters
         net = MixedCNN(config, name)
-        acc = net.train(Xtr_resh, Xtrainfeats, ytr_resh, Xval_resh, Xvalfeats, yval_resh, True)
+        net.train(Xtr_resh, Xtrainfeats, ytrain, Xval_resh, Xvalfeats, yval, True)
+        acc = net.score(Xval_resh, Xvalfeats, yval_resh)
         print("Training ended")
         print("Epochs: {:d}".format(len(net.train_loss)))
         print("Validation acc: {}".format(acc))
@@ -163,6 +161,7 @@ print("Results: ")
 print(results)
 
 #Get best network
+sys.exit(0)
 imsize, nfilters = winning_cnn
 print("Best network: {:d} image size and {:d} filters".format(imsize, nfilters))
 print("Re-training")

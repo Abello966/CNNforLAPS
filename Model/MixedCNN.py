@@ -1,5 +1,4 @@
 ##Constructing Lasagne network, compiling train and test functions
-import matplotlib.pyplot as plt
 import theano
 import theano.tensor as T
 from theano import shared
@@ -8,7 +7,7 @@ from lasagne.layers import *
 from lasagne.nonlinearities import *
 from lasagne.init import GlorotUniform
 from Model.model import LasagneModel
-from image_processing import *
+from Util.image_processing import *
 
 class MixedCNN(LasagneModel):
 
@@ -147,7 +146,6 @@ class MixedCNN(LasagneModel):
         test_loss = list()
         last_loss = float('inf')
         for epoch in range(epochs):
-            print("epoch {}".format(epoch))
             epoch_loss = 0
             batches = 0
             for batch in minibatch_iter(ytrain, batchsize):
@@ -167,4 +165,4 @@ class MixedCNN(LasagneModel):
             if (epoch_loss > stopping * last_loss):
                 break
             last_loss = epoch_loss
-        return val_acc
+        return train_loss, test_loss, val_acc

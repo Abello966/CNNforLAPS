@@ -1,5 +1,7 @@
 ##Constructing Lasagne network, compiling train and test functions
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 class LasagneModel:

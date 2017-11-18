@@ -6,7 +6,6 @@ from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer, 
 from lasagne.nonlinearities import softmax, rectify
 from lasagne.regularization import l2, regularize_network_params
 import numpy as np
-import matplotlib.pyplot as plt
 from Util.image_processing import minibatch_iter, minibatch_iter_balanced, augmentation_iter
 
 class CNN(LasagneModel):
