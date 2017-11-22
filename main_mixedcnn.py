@@ -16,7 +16,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description=
                                 "Perform training of models on dataset")
-parser.add_argument('--input', dest='input', metavar='in', type=str, nargs=1,
+parser.add_argument('--images', dest='input', metavar='in', type=str, nargs=1,
                     help="input grayscale numpy images")
 parser.add_argument('--feats', dest='feats', metavar='ft', type=str, nargs=1,
                     help="numpy matrix of features")
@@ -49,7 +49,17 @@ else:
 config = {}
 config['test_size'] = 0.1
 config['stratified'] = False
-config['order'] = ['shallow', 'deep']
+config['order'] = ['all']
+
+#config for all training
+config_all = {}
+config_all['verbose'] = True
+config_all['epochs'] = 1000
+config_all['learning_rate'] = 0.001
+config_all['batchsize'] = 500
+config_all['stopping'] = float('inf')
+config['all'] = config_all
+
 
 # config for shallow training
 config_sh = {}
@@ -71,7 +81,7 @@ config['deep'] = config_dp
 
 ## Define variables of experiment
 pos_imsize = [32]
-pos_nfilters = [16]
+pos_nfilters = [32]
 
 ## Load data
 files = np.load(args.input[0])
@@ -120,7 +130,7 @@ Xtrainfeats = Xtrainfeats[train_idx]
 ytrain = ytrain[train_idx]
 
 #Do experiments
-winning_cnn = None
+winning_cnn = (pos_imsize[0], pos_nfilters[0])
 winning_cnn_acc = 0
 results = {}
 for imsize in pos_imsize:
@@ -135,21 +145,23 @@ for imsize in pos_imsize:
         print(name)
         print("Compiling CNN")
         config['nfilters'] = nfilters
-        net = MixedCNN(config, name)
-        net.train(Xtr_resh, Xtrainfeats, ytrain, Xval_resh, Xvalfeats, yval, True)
-        acc = net.score(Xval_resh, Xvalfeats, yval_resh)
+        acc = 0
+        for i in range(0):
+            net = MixedCNN(config, name)
+            net.train(Xtr_resh, Xtrainfeats, ytrain, Xval_resh, Xvalfeats, yval, True)
+            acc = net.score(Xval_resh, Xvalfeats, yval_resh)
+            del net
+
         print("Training ended")
-        print("Epochs: {:d}".format(len(net.train_loss)))
         print("Validation acc: {}".format(acc))
         print("------------" * 5)
 
         results[(imsize, nfilters)] = acc
-        if winning_cnn_acc < acc:
-            winnig_cnn = (imsize, nfilters)
+        if winning_cnn_acc > acc:
+            winning_cnn = (imsize, nfilters)
             winning_cnn_acc = acc
             
         #Let GC know it can free this now
-        del net
 
     del Xtr_resh
     del Xval_resh
@@ -161,13 +173,12 @@ print("Results: ")
 print(results)
 
 #Get best network
-sys.exit(0)
 imsize, nfilters = winning_cnn
 print("Best network: {:d} image size and {:d} filters".format(imsize, nfilters))
 print("Re-training")
 
 #Separate train, test 
-train_idx, test_idx = stratified_split(y, test_size, random_state=0, stratified=stratified)
+train_idx, test_idx = stratified_split(X.shape[0], config['test_size'], random_state=0, stratified=config['stratified'])
 Xtrain = X[train_idx]
 Xtrainfeats = Xfeats[train_idx]
 ytrain = y[train_idx]
@@ -175,12 +186,15 @@ Xtest = X[test_idx]
 Xtestfeats = Xfeats[test_idx]
 ytest = y[test_idx]
 
+ytrain = ytrain.astype("uint8")
+ytest = ytest.astype("uint8")
+
 Xtr_resh, ytr_resh = reshape_dataset(Xtrain, ytrain, imsize)
 Xtest_resh, ytest_resh = reshape_dataset(Xtest, ytest, imsize)
 
-config['deep']['imsize'] = imsize
-config['deep']['nfilters'] = nfilters
-network = MixedCNN(config, "mixed")
+config['imsize'] = imsize
+config['nfilters'] = nfilters
 
+network = MixedCNN(config, "Mixed - All")
 acc = network.train(Xtr_resh, Xtrainfeats, ytr_resh, Xtest_resh, Xtestfeats, ytest_resh, False)
 print("Final test accuracy:" + str(acc))
